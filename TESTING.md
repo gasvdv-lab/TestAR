@@ -1,4 +1,4 @@
-# testAR v0.3.1 — TESTING
+# testAR v0.3.2 — TESTING
 
 ## Automatisch uitgevoerd
 - [x] vereiste bestanden aanwezig
@@ -59,3 +59,25 @@ Test vóór alle visuele beoordeling uitsluitend:
 3. Zoek een vlak.
 4. Plaats de vulkaan.
 5. Stuur een screenshot van het resultaat.
+
+
+## v0.3.2 specifieke regressietest
+Automatisch:
+- [x] compatibility bridge aanwezig vóór `renderer.xr.setSession`
+- [x] `local-floor` wordt vervangen door `local`
+- [x] `viewer` wordt via originele XRSession-methode aangevraagd
+- [x] JS-syntax
+- [x] lokale imports
+
+Android:
+- [ ] Start AR zonder `requestReferenceSpace`-fout
+- [ ] camerabeeld zichtbaar
+- [ ] debugtekst bevat `Ref: local (compatibility bridge)`
+- [ ] wit reticle op vlak
+- [ ] vulkaan plaatsbaar
+- [ ] vulkaan blijft verankerd
+- [ ] reset
+- [ ] sluiten
+- [ ] opnieuw starten zonder refresh
+
+Stop de test direct als dezelfde reference-spacefout terugkomt en stuur screenshot; dan verwijderen we Three.js volledig uit de XR-sessionlaag en behouden we het uitsluitend als scene/mesh generator.

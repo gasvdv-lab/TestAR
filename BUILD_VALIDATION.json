@@ -1,9 +1,10 @@
 {
   "project": "testAR",
-  "version": "0.3.1",
-  "fix": "Three.js XR reference-space compatibility",
-  "reference_space_type": "local",
-  "three_default_local_floor_overridden": true,
+  "version": "0.3.2",
+  "fix": "XRSession requestReferenceSpace compatibility bridge",
+  "proven_device_reference": "v0.2.0 local + viewer",
+  "three_requested": "local-floor intercepted",
+  "effective_device_request": "local",
   "missing_local_imports": [],
   "javascript_syntax": {
     "textures.js": "passed",

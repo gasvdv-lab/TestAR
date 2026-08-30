@@ -38,3 +38,16 @@
 - [x] renderer en placement delen exact dezelfde reference space
 - [ ] fysieke Android AR-start opnieuw testen
 - [ ] daarna visual-fidelity test van v0.3.x hervatten
+
+
+## v0.3.2 — Raw-WebXR compatibility bridge
+- [x] v0.3.1 als mislukte fix geregistreerd
+- [x] werkende v0.2.0 reference-spacegedrag als technische referentie genomen
+- [x] `local-floor` aanvragen van Three.js worden onderschept
+- [x] effectieve aanvraag naar toestel is `local`
+- [x] `viewer` blijft voor hit-test
+- [x] renderer en placement delen dezelfde XRReferenceSpace
+- [ ] fysieke Android AR-start
+- [ ] hit-test
+- [ ] plaatsing
+- [ ] visual-fidelity test

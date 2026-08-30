@@ -1,4 +1,4 @@
-# testAR — v0.3.1 Reference-Space Compatibility Fix
+# testAR — v0.3.2 Raw-WebXR Compatibility Bridge
 
 ## Vaste app-link
 https://gasvdv-lab.github.io/testAR/
@@ -56,3 +56,31 @@ v0.3.1:
 4. houdt plaatsing, rendering en hit-testresultaten in hetzelfde coördinatenstelsel.
 
 De vulkaangeometrie, textures, lava, rook en ejecta uit v0.3.0 zijn verder niet gewijzigd.
+
+
+## v0.3.2 — tweede reference-space fix
+
+v0.3.1 bleef op het fysieke Android-toestel dezelfde fout geven. Daarom is de fix niet verder op aannames gebaseerd.
+
+### Uitgangspunt
+v0.2.0 heeft op hetzelfde toestel bewezen dat:
+- `immersive-ar` start;
+- `requestReferenceSpace('local')` werkt;
+- `requestReferenceSpace('viewer')` werkt;
+- hit-testing en plaatsing werken.
+
+### Nieuwe aanpak
+Three.js mag zijn normale XR-renderpad behouden, maar iedere interne aanvraag van `local-floor` wordt op de XRSession onderschept en omgezet naar `local`.
+
+Flow:
+
+Three.js vraagt `local-floor`
+→ compatibility bridge
+→ toestel ontvangt `local`
+→ verkregen XRReferenceSpace gaat terug naar Three.js
+→ renderer + placement gebruiken diezelfde space.
+
+Dit voorkomt dat we opnieuw een reference-space-type kiezen dat op het toestel niet ondersteund wordt.
+
+### Visuele content
+De realistische vulkaan uit v0.3.0 blijft ongewijzigd; deze build wijzigt uitsluitend AR-session/reference-space compatibiliteit plus debugfeedback.
