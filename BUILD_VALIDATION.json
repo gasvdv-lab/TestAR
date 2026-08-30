@@ -1,7 +1,8 @@
 {
   "project": "testAR",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "static_validation": "passed",
-  "physical_tests": "pending",
-  "files": 10
+  "physical_ar_validation": "pending",
+  "external_runtime_dependency": "Three.js 0.180.0 via jsDelivr",
+  "app_url": "https://gasvdv-lab.github.io/testAR/"
 }
