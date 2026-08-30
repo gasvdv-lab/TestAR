@@ -5,7 +5,7 @@ export class ARController{
   constructor(callbacks={}){
     this.cb=callbacks;
     this.session=null;this.hitSource=null;this.refSpace=null;this.viewerSpace=null;this.lastHit=null;
-    this.placed=false;this.scale=.45;this.eruption=.8;
+    this.placed=false;this.scale=.45;this.eruption=.8;this.referenceSpaceMode='pending';
   }
 
   setScale(v){this.scale=v;if(this.volcano)this.volcano.scale.setScalar(v)}
@@ -44,27 +44,36 @@ export class ARController{
       domOverlay:{root:document.body}
     });
 
-    // IMPORTANT:
-    // Three.js defaults to `local-floor` for XR reference space.
-    // The Android device used for testAR v0.3.0 accepted immersive AR but rejected
-    // that default reference-space type. v0.2.0 worked with `local`.
-    // Set the type BEFORE setSession(), because Three.js requests it internally.
-    this.renderer.xr.setReferenceSpaceType('local');
+    // v0.3.2 compatibility bridge:
+    // The proven v0.2.0 raw-WebXR path works on this device with `local`.
+    // Three.js internally requests `local-floor` during setSession().
+    // Intercept that request and transparently substitute `local`.
+    const nativeRequestReferenceSpace=this.session.requestReferenceSpace.bind(this.session);
+    this.session.requestReferenceSpace=async(type)=>{
+      const requested=type==='local-floor'?'local':type;
+      return nativeRequestReferenceSpace(requested);
+    };
+
+    // Keep Three.js rendering, but force its internal world-space request through
+    // the compatibility bridge above.
+    this.renderer.xr.setReferenceSpaceType('local-floor');
     await this.renderer.xr.setSession(this.session);
 
-    // Reuse the exact reference space Three.js is rendering against so hit-test
-    // placement and rendering share the same coordinate system.
+    // Three.js now holds the actual `local` XRReferenceSpace returned by the device.
     this.refSpace=this.renderer.xr.getReferenceSpace();
+    this.referenceSpaceMode='local (compatibility bridge)';
     if(!this.refSpace){
-      this.refSpace=await this.session.requestReferenceSpace('local');
+      this.refSpace=await nativeRequestReferenceSpace('local');
+      this.renderer.xr.setReferenceSpace(this.refSpace);
     }
 
-    this.viewerSpace=await this.session.requestReferenceSpace('viewer');
+    // Hit testing still uses viewer space, exactly as in the working v0.2.0 path.
+    this.viewerSpace=await nativeRequestReferenceSpace('viewer');
     this.hitSource=await this.session.requestHitTestSource({space:this.viewerSpace});
 
     this.session.addEventListener('end',()=>this.cleanup());
     this.renderer.setAnimationLoop((t,frame)=>this.render(t,frame));
-    this.cb.onStarted?.();
+    this.cb.onStarted?.(this.referenceSpaceMode);
   }
 
   place(){

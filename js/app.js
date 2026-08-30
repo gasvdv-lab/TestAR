@@ -18,7 +18,7 @@ ui.start.onclick=async()=>{
   try{
     ui.status.textContent='AR starten…';
     ar=new ARController({
-      onStarted:()=>{ui.home.hidden=true;ui.hud.hidden=false;ui.mode.textContent='Zoek een vlak…';ui.guide.textContent='Beweeg langzaam over een tafel of vloer.'},
+      onStarted:(refMode)=>{ui.home.hidden=true;ui.hud.hidden=false;ui.mode.textContent='Zoek een vlak…';ui.guide.textContent='Beweeg langzaam over een tafel of vloer. Ref: '+refMode},
       onCanPlace:v=>{canPlace=v;updatePlace();if(v){ui.mode.textContent='Vlak gevonden';ui.guide.textContent='Plaats de vulkaan op de witte ring.'}},
       onPlaced:()=>{canPlace=false;updatePlace();ui.mode.textContent='Vulkaan geplaatst';ui.guide.textContent='Beweeg rond de vulkaan. De uitbarsting blijft verankerd.'},
       onReset:()=>{canPlace=false;updatePlace();ui.mode.textContent='Zoek een nieuw vlak…';ui.guide.textContent='Beweeg langzaam over een tafel of vloer.'},
