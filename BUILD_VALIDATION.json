@@ -1,0 +1,7 @@
+{
+  "project": "testAR",
+  "version": "0.1.0",
+  "static_validation": "passed",
+  "physical_tests": "pending",
+  "files": 10
+}
