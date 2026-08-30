@@ -44,8 +44,21 @@ export class ARController{
       domOverlay:{root:document.body}
     });
 
+    // IMPORTANT:
+    // Three.js defaults to `local-floor` for XR reference space.
+    // The Android device used for testAR v0.3.0 accepted immersive AR but rejected
+    // that default reference-space type. v0.2.0 worked with `local`.
+    // Set the type BEFORE setSession(), because Three.js requests it internally.
+    this.renderer.xr.setReferenceSpaceType('local');
     await this.renderer.xr.setSession(this.session);
-    this.refSpace=await this.session.requestReferenceSpace('local');
+
+    // Reuse the exact reference space Three.js is rendering against so hit-test
+    // placement and rendering share the same coordinate system.
+    this.refSpace=this.renderer.xr.getReferenceSpace();
+    if(!this.refSpace){
+      this.refSpace=await this.session.requestReferenceSpace('local');
+    }
+
     this.viewerSpace=await this.session.requestReferenceSpace('viewer');
     this.hitSource=await this.session.requestHitTestSource({space:this.viewerSpace});
 
