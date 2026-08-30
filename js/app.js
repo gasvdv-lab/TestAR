@@ -1,8 +1,116 @@
-const $=id=>document.getElementById(id);let session,refSpace,viewer,hitSource,gl,layer,lastHit=null,placed=null,scale=1,startTime=0;
-const ui={home:$('home'),panel:$('ui'),start:$('start'),exit:$('exit'),reset:$('reset'),place:$('place'),mode:$('mode'),hint:$('hint'),status:$('status'),scale:$('scale'),scaleText:$('scaleText')};
-ui.scale.oninput=()=>{scale=ui.scale.value/100;ui.scaleText.textContent=ui.scale.value+'%'};ui.start.onclick=startAR;ui.exit.onclick=endAR;ui.reset.onclick=()=>{placed=null;ui.mode.textContent='Zoek een nieuw vlak…';ui.hint.textContent='Beweeg over een tafel of vloer.'};ui.place.onclick=()=>{if(lastHit&&!placed){placed=lastHit.getPose(refSpace).transform.matrix;ui.place.disabled=true;ui.mode.textContent='Vulkaan geplaatst';ui.hint.textContent='Beweeg rond de vulkaan.'}};
-async function startAR(){try{if(!navigator.xr)throw Error('WebXR niet ondersteund. Gebruik Android Chrome met ARCore.');if(!await navigator.xr.isSessionSupported('immersive-ar'))throw Error('Immersive AR niet beschikbaar op dit toestel.');session=await navigator.xr.requestSession('immersive-ar',{requiredFeatures:['hit-test'],optionalFeatures:['dom-overlay'],domOverlay:{root:document.body}});gl=document.createElement('canvas').getContext('webgl',{xrCompatible:true,alpha:true});await gl.makeXRCompatible();layer=new XRWebGLLayer(session,gl);session.updateRenderState({baseLayer:layer});refSpace=await session.requestReferenceSpace('local');viewer=await session.requestReferenceSpace('viewer');hitSource=await session.requestHitTestSource({space:viewer});ui.home.hidden=true;ui.panel.hidden=false;startTime=performance.now();session.requestAnimationFrame(frame);session.addEventListener('end',cleanup)}catch(e){ui.status.textContent=e.message;}}
-async function endAR(){if(session)await session.end()}function cleanup(){hitSource?.cancel?.();hitSource=null;session=null;ui.panel.hidden=true;ui.home.hidden=false;ui.place.disabled=true;lastHit=null;placed=null}
-function frame(t,f){if(!session)return;const pose=f.getViewerPose(refSpace);gl.bindFramebuffer(gl.FRAMEBUFFER,layer.framebuffer);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);lastHit=null;const hits=f.getHitTestResults(hitSource);if(hits.length&&!placed){lastHit=hits[0];ui.place.disabled=false;ui.mode.textContent='Vlak gevonden';ui.hint.textContent='Tik op Plaats vulkaan.'}if(pose){for(const v of pose.views){const vp=layer.getViewport(v);gl.viewport(vp.x,vp.y,vp.width,vp.height);if(placed)drawVolcano(v,t)}}session.requestAnimationFrame(frame)}
-function mul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
-function drawVolcano(view,t){const proj=view.projectionMatrix,viewm=view.transform.inverse.matrix,mvp=mul(proj,mul(viewm,placed));const p=gl.createProgram();const vs=gl.createShader(gl.VERTEX_SHADER);gl.shaderSource(vs,'attribute vec3 p;uniform mat4 m;void main(){gl_Position=m*vec4(p,1.);}');gl.compileShader(vs);const fs=gl.createShader(gl.FRAGMENT_SHADER);gl.shaderSource(fs,'precision mediump float;uniform vec4 c;void main(){gl_FragColor=c;}');gl.compileShader(fs);gl.attachShader(p,vs);gl.attachShader(p,fs);gl.linkProgram(p);gl.useProgram(p);const loc=gl.getAttribLocation(p,'p'),ml=gl.getUniformLocation(p,'m'),cl=gl.getUniformLocation(p,'c');const verts=[];const n=72,r=.42*scale,h=.48*scale;for(let i=0;i<n;i++){let a=i/n*6.283,b=(i+1)/n*6.283;verts.push(0,0,0,r*Math.cos(a),0,r*Math.sin(a),r*Math.cos(b),0,r*Math.sin(b));verts.push(0,h,0,r*Math.cos(b),0,r*Math.sin(b),r*Math.cos(a),0,r*Math.sin(a));}gl.bindBuffer(gl.ARRAY_BUFFER,gl.createBuffer());gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(verts),gl.STATIC_DRAW);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,3,gl.FLOAT,false,0,0);gl.uniformMatrix4fv(ml,false,mvp);gl.uniform4f(cl,.12,.08,.05,1);gl.enable(gl.DEPTH_TEST);gl.drawArrays(gl.TRIANGLES,0,verts.length/3);gl.uniform4f(cl,1,.22,.01,1);const lava=[];for(let i=0;i<24;i++){let a=i/24*6.283;lava.push(0,h*.96,0,Math.cos(a)*r,.01,Math.sin(a)*r)}gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(lava),gl.STATIC_DRAW);gl.drawArrays(gl.LINES,0,lava.length/3);const sparks=[];for(let i=0;i<140;i++){let a=i*.37,ph=(t/1000*.8+i*.13)%1,rr=.05+ph*.35;sparks.push(Math.cos(a)*rr,(h+ph*.8*scale),Math.sin(a)*rr)}gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(sparks),gl.STATIC_DRAW);gl.uniform4f(cl,1,.45,.02,.9);gl.drawArrays(gl.POINTS,0,sparks.length/3);gl.deleteProgram(p)}document.addEventListener('visibilitychange',()=>{if(document.hidden&&session)endAR()});
+import * as THREE from 'three';
+
+const $=id=>document.getElementById(id);
+let renderer,scene,camera,session,refSpace,viewerSpace,hitSource,reticle,volcano,lastHit=null;
+let scale=0.85, placed=false, clock=new THREE.Clock(), smoke=[], sparks=[], lavaPulse=[];
+const hud=$('hud'), start=$('start'), placeBtn=$('place'), mode=$('mode'), guide=$('guide');
+
+$('scale').oninput=e=>{scale=+e.target.value/100;$('scaleText').textContent=e.target.value+'%'};
+$('startAR').onclick=startAR;$('close').onclick=()=>session?.end();$('reset').onclick=()=>resetVolcano();placeBtn.onclick=placeVolcano;
+
+function noise(x,z){return Math.sin(x*7.1+Math.sin(z*4.7))*0.035+Math.sin(z*10.3+x*2.2)*0.018+Math.sin((x+z)*18.0)*0.009}
+
+function buildVolcano(){
+ const g=new THREE.Group(); g.visible=false;
+ // irregular volcanic cone
+ const geo=new THREE.CylinderGeometry(.11,.62,.52,96,42,true);
+ const pos=geo.attributes.position;
+ for(let i=0;i<pos.count;i++){
+   let x=pos.getX(i), y=pos.getY(i), z=pos.getZ(i);
+   let radial=Math.hypot(x,z), ang=Math.atan2(z,x);
+   let n=noise(x*2.5,z*2.5)+(Math.sin(ang*7+y*25)*.012);
+   let factor=1+n/(Math.max(radial,.08));
+   pos.setXYZ(i,x*factor,y+n*.6,z*factor);
+ }
+ geo.computeVertexNormals();
+ const rock=new THREE.MeshStandardMaterial({color:0x211b18,roughness:.98,metalness:.02});
+ const mountain=new THREE.Mesh(geo,rock); mountain.position.y=.26; g.add(mountain);
+ // dark ground apron
+ const apronGeo=new THREE.CircleGeometry(.72,96);
+ const apron=new THREE.Mesh(apronGeo,new THREE.MeshStandardMaterial({color:0x171310,roughness:1}));
+ apron.rotation.x=-Math.PI/2;apron.position.y=.002;g.add(apron);
+ // crater rim
+ const rim=new THREE.Mesh(new THREE.TorusGeometry(.115,.035,12,64),new THREE.MeshStandardMaterial({color:0x100d0b,roughness:1}));
+ rim.rotation.x=Math.PI/2;rim.position.y=.53;g.add(rim);
+ // glowing crater
+ const craterMat=new THREE.MeshBasicMaterial({color:0xff4a00});
+ const crater=new THREE.Mesh(new THREE.CircleGeometry(.095,48),craterMat);crater.rotation.x=-Math.PI/2;crater.position.y=.526;g.add(crater);
+ lavaPulse.push(crater);
+ // lava rivers: emissive tubes down slopes
+ for(let j=0;j<7;j++){
+   let a=j/7*Math.PI*2+(j%2)*.21;
+   let pts=[];
+   for(let k=0;k<9;k++){
+     let q=k/8, r=.09+q*.48, y=.52*(1-q)+.018;
+     let wob=Math.sin(k*1.7+j)*.018;
+     pts.push(new THREE.Vector3(Math.cos(a+wob)*r,y,Math.sin(a+wob)*r));
+   }
+   let curve=new THREE.CatmullRomCurve3(pts);
+   let tube=new THREE.Mesh(new THREE.TubeGeometry(curve,50,.010+(j%3)*.003,8,false),
+     new THREE.MeshStandardMaterial({color:0xff3100,emissive:0xff2200,emissiveIntensity:3,roughness:.35}));
+   g.add(tube);lavaPulse.push(tube);
+ }
+ // local orange light
+ let light=new THREE.PointLight(0xff4a10,4,2.2,2);light.position.set(0,.62,0);g.add(light);
+ // smoke clouds
+ for(let i=0;i<34;i++){
+   const mat=new THREE.MeshLambertMaterial({color:i<8?0x3a302b:0x242424,transparent:true,opacity:.28,depthWrite:false});
+   const m=new THREE.Mesh(new THREE.IcosahedronGeometry(.07+Math.random()*.08,1),mat);
+   m.userData={phase:Math.random(),angle:Math.random()*Math.PI*2,rad:.03+Math.random()*.13,speed:.10+Math.random()*.13};
+   g.add(m);smoke.push(m);
+ }
+ // incandescent ejecta
+ const sparkGeo=new THREE.SphereGeometry(.006,5,4);
+ for(let i=0;i<70;i++){
+   const m=new THREE.Mesh(sparkGeo,new THREE.MeshBasicMaterial({color:i%4?0xff6a00:0xffd05a}));
+   m.userData={phase:Math.random(),angle:Math.random()*Math.PI*2,speed:.7+Math.random()*.8,rad:.08+Math.random()*.35};
+   g.add(m);sparks.push(m);
+ }
+ return g;
+}
+function animateEffects(){
+ const t=clock.getElapsedTime();
+ lavaPulse.forEach((m,i)=>{if(m.material){if('emissiveIntensity'in m.material)m.material.emissiveIntensity=2.2+Math.sin(t*6+i)*1.3;}});
+ smoke.forEach((m,i)=>{
+   let u=(t*m.userData.speed+m.userData.phase)%1, spread=m.userData.rad*(.25+u);
+   m.position.set(Math.cos(m.userData.angle+t*.18)*spread,.54+u*.85,Math.sin(m.userData.angle+t*.18)*spread);
+   let s=.6+u*1.9;m.scale.setScalar(s);m.material.opacity=.34*(1-u);
+ });
+ sparks.forEach(m=>{
+   let u=(t*m.userData.speed+m.userData.phase)%1;
+   let r=m.userData.rad*u;
+   m.position.set(Math.cos(m.userData.angle)*r,.55+Math.sin(u*Math.PI)*(.45+m.userData.rad),Math.sin(m.userData.angle)*r);
+   m.visible=u<.9;
+ });
+}
+async function startAR(){
+ try{
+  if(!navigator.xr||!await navigator.xr.isSessionSupported('immersive-ar'))throw Error('Immersive WebXR AR is niet beschikbaar.');
+  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera();
+  renderer=new THREE.WebGLRenderer({alpha:true,antialias:true});renderer.xr.enabled=true;renderer.setPixelRatio(Math.min(devicePixelRatio,2));document.body.appendChild(renderer.domElement);
+  scene.add(new THREE.HemisphereLight(0xddeeff,0x332211,2.2));
+  volcano=buildVolcano();volcano.scale.setScalar(scale);scene.add(volcano);
+  reticle=new THREE.Mesh(new THREE.RingGeometry(.07,.085,48).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffffff}));
+  reticle.matrixAutoUpdate=false;reticle.visible=false;scene.add(reticle);
+  session=await navigator.xr.requestSession('immersive-ar',{requiredFeatures:['hit-test'],optionalFeatures:['dom-overlay','light-estimation'],domOverlay:{root:document.body}});
+  await renderer.xr.setSession(session);refSpace=await session.requestReferenceSpace('local');viewerSpace=await session.requestReferenceSpace('viewer');hitSource=await session.requestHitTestSource({space:viewerSpace});
+  session.addEventListener('end',cleanup);start.hidden=true;hud.hidden=false;renderer.setAnimationLoop(render);
+ }catch(e){$('status').textContent=e.message}
+}
+function render(t,frame){
+ if(frame&&hitSource&&!placed){
+   const hits=frame.getHitTestResults(hitSource);lastHit=hits[0]||null;
+   if(lastHit){const p=lastHit.getPose(refSpace);reticle.visible=true;reticle.matrix.fromArray(p.transform.matrix);placeBtn.disabled=false;mode.textContent='Vlak gevonden';guide.textContent='Plaats de vulkaan op de witte ring.'}
+   else{reticle.visible=false;placeBtn.disabled=true;mode.textContent='Zoek een vlak…'}
+ }
+ if(placed)animateEffects();
+ renderer.render(scene,camera);
+}
+function placeVolcano(){
+ if(!lastHit)return;const p=lastHit.getPose(refSpace);volcano.position.set(p.transform.position.x,p.transform.position.y,p.transform.position.z);
+ volcano.quaternion.set(p.transform.orientation.x,p.transform.orientation.y,p.transform.orientation.z,p.transform.orientation.w);
+ volcano.scale.setScalar(scale);volcano.visible=true;placed=true;reticle.visible=false;placeBtn.disabled=true;mode.textContent='Vulkaan geplaatst';guide.textContent='Beweeg rond de vulkaan — de uitbarsting blijft op zijn plaats.';
+}
+function resetVolcano(){placed=false;volcano.visible=false;reticle.visible=false;placeBtn.disabled=true;mode.textContent='Zoek een nieuw vlak…';guide.textContent='Beweeg langzaam over een tafel of vloer.'}
+function cleanup(){renderer?.setAnimationLoop(null);hitSource?.cancel?.();hitSource=null;session=null;renderer?.domElement?.remove();hud.hidden=true;start.hidden=false;placed=false;smoke=[];sparks=[];lavaPulse=[];$('status').textContent='AR-sessie afgesloten.'}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&session)session.end()});
