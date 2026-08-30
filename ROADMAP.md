@@ -29,3 +29,12 @@
 - [ ] lavaflow over gedetecteerd vlak
 - [ ] eruption audio / spatial audio
 - [ ] environment light estimation
+
+
+## v0.3.1 — Android reference-space fix
+- [x] oorzaak AR-startregressie gelokaliseerd
+- [x] Three.js default `local-floor` niet langer gebruikt
+- [x] Three.js XR reference space geforceerd naar `local`
+- [x] renderer en placement delen exact dezelfde reference space
+- [ ] fysieke Android AR-start opnieuw testen
+- [ ] daarna visual-fidelity test van v0.3.x hervatten

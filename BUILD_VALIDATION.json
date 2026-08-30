@@ -1,9 +1,16 @@
 {
   "project": "testAR",
-  "version": "0.3.0",
-  "static_validation": "passed",
-  "stable_ar_technical_reference": "v0.2.0 visual fidelity failed",
-  "external_dependency": "Three.js 0.180.0 via jsDelivr",
+  "version": "0.3.1",
+  "fix": "Three.js XR reference-space compatibility",
+  "reference_space_type": "local",
+  "three_default_local_floor_overridden": true,
+  "missing_local_imports": [],
+  "javascript_syntax": {
+    "textures.js": "passed",
+    "volcano.js": "passed",
+    "ar.js": "passed",
+    "app.js": "passed"
+  },
   "physical_android_test": "pending",
-  "missing_local_imports": []
+  "app_url": "https://gasvdv-lab.github.io/testAR/"
 }

@@ -1,4 +1,4 @@
-# testAR v0.3.0 — TESTING
+# testAR v0.3.1 — TESTING
 
 ## Automatisch uitgevoerd
 - [x] vereiste bestanden aanwezig
@@ -37,3 +37,25 @@
 
 ## Succescriterium
 v0.3.0 is visueel geslaagd wanneer de vulkaan niet langer als een kale geometrische kegel/wireframe-effect oogt en de eruptie als een duidelijk 3D tafeldiorama wordt ervaren.
+
+
+## v0.3.1 regressietest — reference space
+- [x] codecontrole: `setReferenceSpaceType('local')` staat vóór `renderer.xr.setSession()`
+- [x] codecontrole: render reference space wordt via `renderer.xr.getReferenceSpace()` hergebruikt
+- [x] codecontrole: hit-test source blijft gebaseerd op `viewer`
+- [x] lokale JS-syntax gecontroleerd
+- [ ] Android: Start AR geeft GEEN `requestReferenceSpace` fout meer
+- [ ] Android: camerabeeld opent
+- [ ] Android: witte hit-test ring verschijnt
+- [ ] Android: vulkaan kan geplaatst worden
+- [ ] Android: vulkaan blijft ruimtelijk verankerd
+- [ ] Android: reset werkt
+- [ ] Android: sluiten en opnieuw starten werkt
+
+### Eerst uitvoeren
+Test vóór alle visuele beoordeling uitsluitend:
+1. Start AR.
+2. Controleer dat de oude reference-space fout verdwenen is.
+3. Zoek een vlak.
+4. Plaats de vulkaan.
+5. Stuur een screenshot van het resultaat.
