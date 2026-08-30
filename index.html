@@ -1,17 +1,48 @@
 <!doctype html>
-<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<title>testAR v0.2.0</title><link rel="stylesheet" href="./css/style.css">
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}</script></head>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>testAR v0.3.0</title>
+<link rel="stylesheet" href="./css/style.css">
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}
+</script>
+</head>
 <body>
-<div id="start">
-  <div class="panel"><span class="tag">testAR v0.2.0</span><h1>Realistische vulkaan in AR</h1>
-  <p>Open je camera, scan een tafel of vloer en plaats de vulkaan in de echte ruimte.</p>
-  <label>Schaal <input id="scale" type="range" min="35" max="180" value="85"><b id="scaleText">85%</b></label>
-  <button id="startAR">Start AR</button><p id="status">Android Chrome + ARCore vereist.</p></div>
-</div>
-<div id="hud" hidden>
- <div class="top"><button id="close">×</button><div><b>testAR</b><small id="mode">Zoek een vlak…</small></div><button id="reset">↻</button></div>
- <div id="guide">Beweeg langzaam over een tafel of vloer.</div>
- <button id="place" disabled>Plaats vulkaan</button>
-</div>
-<script type="module" src="./js/app.js"></script></body></html>
+<section id="home">
+  <div class="panel">
+    <span class="tag">testAR v0.3.0</span>
+    <h1>Realistic Volcano Rendering</h1>
+    <p>Scan een tafel of vloer en plaats een veel gedetailleerdere miniatuurvulkaan in je echte omgeving.</p>
+
+    <label>Grootte
+      <input id="scale" type="range" min="20" max="120" value="45">
+    </label>
+    <div class="range"><span>20%</span><b id="scaleText">45%</b><span>120%</span></div>
+
+    <label>Uitbarstingskracht
+      <input id="eruption" type="range" min="30" max="140" value="80">
+    </label>
+    <div class="range"><span>30%</span><b id="eruptionText">80%</b><span>140%</span></div>
+
+    <button id="startAR">Start AR</button>
+    <p id="status">Android Chrome + ARCore vereist.</p>
+  </div>
+</section>
+
+<section id="hud" hidden>
+  <header>
+    <button id="close">×</button>
+    <div><strong>testAR</strong><small id="mode">Zoek een vlak…</small></div>
+    <button id="reset">↻</button>
+  </header>
+
+  <div id="guide">Beweeg langzaam over een tafel of vloer.</div>
+  <button id="place" disabled>Plaats vulkaan</button>
+</section>
+
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>

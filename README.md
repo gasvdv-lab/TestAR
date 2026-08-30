@@ -1,28 +1,38 @@
-# testAR v0.2.0 — Realistic Volcano AR
+# testAR — v0.3.0 Realistic Volcano Rendering
 
-App-link na publicatie:
+## Vaste app-link
 https://gasvdv-lab.github.io/testAR/
 
 ## Doel
-Echte camera-AR: scan een horizontaal vlak, plaats een procedureel opgebouwde 3D-vulkaan en bekijk de geanimeerde uitbarsting vanuit verschillende hoeken.
+v0.3.0 vervangt de simpele procedurele kegel uit v0.2.0 door een veel rijkere AR-vulkaan met onregelmatige mesh, PBR-achtige rotsmaterialen, krater, lava, rook en vulkanische ejecta.
 
-## Nieuw t.o.v. v0.1.0
-- Veel gedetailleerdere onregelmatige vulkaangeometrie
-- Krater + gloeiende lavakern
-- 7 geanimeerde lavastromen
-- 34 bewegende rookwolken
-- 70 vulkanische vonken/projectielen
-- Dynamisch oranje licht
-- Witte AR-plaatsingsring
-- Schaal vóór plaatsing
-- Reset en correcte XR cleanup
+## Belangrijk
+Deze build blijft volledig browsergebaseerd. Er is geen APK nodig.
 
-## Techniek
-Three.js wordt als ES-module via jsDelivr geladen. WebXR/ARCore blijft de AR-laag.
+## Nieuw
+- grillige, radiaal opgebouwde vulkaanmesh
+- kraterdepressie en donkere kraterrand
+- procedurele rock texture
+- procedurele bump texture
+- MeshStandardMaterial voor rots
+- 9 echte 3D lava-tubes
+- emissieve lava
+- dynamische orange point-light
+- 42 transparante rooklagen
+- 95 gloeiende ejecta/deeltjes
+- 85 losse rotsblokken rond de voet
+- kleinere realistischere standaardschaal: 45%
+- eruptiekracht instelbaar
+- hit-test reticle
+- reset + XR cleanup
+
+## Dependency
+Three.js 0.180.0 via jsDelivr.
 
 ## Installatie
-Upload de INHOUD van deze ZIP naar de root van repository `testAR`.
-GitHub Pages: Settings > Pages > Deploy from branch > main > /(root).
+Upload de volledige INHOUD van deze ZIP naar repository `testAR`.
+GitHub Pages:
+Settings → Pages → Deploy from branch → main → /(root)
 
-Vaste link:
+Open daarna:
 https://gasvdv-lab.github.io/testAR/
